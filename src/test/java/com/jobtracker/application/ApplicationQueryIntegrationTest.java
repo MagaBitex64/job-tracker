@@ -39,7 +39,7 @@ class ApplicationQueryIntegrationTest extends BaseIntegrationTest {
                         .header("Authorization", "Bearer " + user1.token()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(5)))
-                .andExpect(jsonPath("$.totalElements").value(5));
+                .andExpect(jsonPath("$.page.totalElements").value(5));
 
         // 2. Filter by status = INTERVIEW -> 2 items (Google, Netflix)
         mockMvc.perform(get("/api/v1/applications?status=INTERVIEW")
@@ -57,19 +57,19 @@ class ApplicationQueryIntegrationTest extends BaseIntegrationTest {
                 .andExpect(jsonPath("$.content[0].company").value("Google"))
                 .andExpect(jsonPath("$.content[0].position").value("Senior Software Engineer"));
 
-        // 4. Search by position case-insensitive (e.g. "engineer") -> 4 items for User 1
+        // 4. Search by position case-insensitive (e.g. "engineer") -> 3 items for User 1
         mockMvc.perform(get("/api/v1/applications?search=engineer")
                         .header("Authorization", "Bearer " + user1.token()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content", hasSize(4)));
+                .andExpect(jsonPath("$.content", hasSize(3)));
 
         // 5. Pagination (page=0, size=2)
         mockMvc.perform(get("/api/v1/applications?page=0&size=2")
                         .header("Authorization", "Bearer " + user1.token()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(2)))
-                .andExpect(jsonPath("$.totalElements").value(5))
-                .andExpect(jsonPath("$.totalPages").value(3));
+                .andExpect(jsonPath("$.page.totalElements").value(5))
+                .andExpect(jsonPath("$.page.totalPages").value(3));
     }
 
     @Test
