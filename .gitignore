@@ -48,3 +48,7 @@ Thumbs.db
 
 # Local Interview Preparation file (kept local per project spec)
 INTERVIEW_PREP.md
+
+# Frontend dependencies
+frontend/node_modules/
+frontend/dist/

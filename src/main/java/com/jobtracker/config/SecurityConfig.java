@@ -53,12 +53,16 @@ public class SecurityConfig {
                         // Public Static Web Resources & UI
                         .requestMatchers(
                                 "/",
+                                "/login",
+                                "/register",
+                                "/board",
                                 "/index.html",
                                 "/login.html",
                                 "/register.html",
                                 "/favicon.ico",
                                 "/css/**",
                                 "/js/**",
+                                "/assets/**",
                                 "/images/**",
                                 "/static/**"
                         ).permitAll()

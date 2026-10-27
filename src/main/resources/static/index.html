@@ -1,18 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Job Tracker — Kanban Board</title>
+  <title>Трекер вакансий — Job Tracker</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      darkMode: 'class',
       theme: {
         extend: {
+          colors: {
+            hh: {
+              red: '#d6001c',
+              redHover: '#ba0018',
+              grayBg: '#f7f8f9',
+              dark: '#111827',
+              border: '#e5e7eb',
+            },
+          },
           fontFamily: {
-            sans: ['Inter', 'sans-serif'],
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
           },
         },
       },
@@ -22,225 +30,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-  <style>
-    body { font-family: 'Inter', sans-serif; }
-    /* Hide scrollbar on column drag container */
-    .kanban-scroll::-webkit-scrollbar {
-      height: 8px;
-    }
-    .kanban-scroll::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    .kanban-scroll::-webkit-scrollbar-thumb {
-      background-color: rgba(156, 163, 175, 0.4);
-      border-radius: 4px;
-    }
-  </style>
-  <script>
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      document.documentElement.classList.add('dark');
-    }
-  </script>
+  <style>body{color:#111827;background-color:#f7f8f9;font-family:Inter,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif}.custom-scroll::-webkit-scrollbar{width:6px;height:6px}.custom-scroll::-webkit-scrollbar-track{background:#f1f2f4}.custom-scroll::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:3px}</style>
+  <script type="module" crossorigin src="/assets/index-rWW7n1mL.js"></script>
 </head>
-<body class="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 flex flex-col">
-
-  <!-- Top Navigation Header -->
-  <header class="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-30">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-      <!-- Logo & Title -->
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-          </svg>
-        </div>
-        <div>
-          <span class="text-lg font-bold tracking-tight">Job Tracker</span>
-          <span class="hidden sm:inline-block ml-2 px-2 py-0.5 text-xs font-medium rounded bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">Kanban</span>
-        </div>
-      </div>
-
-      <!-- User Profile & Logout -->
-      <div class="flex items-center gap-3 sm:gap-4">
-        <a href="/swagger-ui.html" target="_blank" class="hidden md:inline-flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
-          </svg>
-          API Docs
-        </a>
-        <div class="h-4 w-px bg-gray-200 dark:bg-gray-800 hidden md:block"></div>
-        <div class="text-right hidden sm:block">
-          <div id="user-name" class="text-sm font-semibold truncate max-w-[150px]">Loading…</div>
-          <div id="user-email" class="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[150px]"></div>
-        </div>
-        <button
-          id="logout-btn"
-          class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 transition-colors"
-          title="Sign out"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-          </svg>
-          <span class="hidden sm:inline">Logout</span>
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- Sub-bar: Stats & Controls -->
-  <section class="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 sm:px-6 lg:px-8 py-3">
-    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-
-      <!-- Live Stats Bar -->
-      <div id="stats-bar" class="flex flex-wrap items-center gap-3 sm:gap-4 py-1 text-xs sm:text-sm">
-        <!-- Rendered dynamically by ui.renderStats() -->
-        <span class="text-gray-400">Loading stats…</span>
-      </div>
-
-      <!-- Controls: Search, Filter, Add -->
-      <div class="flex flex-wrap items-center gap-2.5">
-        <!-- Search Input -->
-        <div class="relative flex-1 sm:w-64">
-          <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-gray-400">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-            </svg>
-          </span>
-          <input
-            type="text"
-            id="search-input"
-            placeholder="Search company or position…"
-            class="w-full pl-8 pr-3 py-1.5 text-xs sm:text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
-          />
-        </div>
-
-        <!-- Status Filter Select -->
-        <select
-          id="status-filter"
-          class="px-2.5 py-1.5 text-xs sm:text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-        >
-          <option value="">All Statuses</option>
-          <option value="WISHLIST">Wishlist</option>
-          <option value="APPLIED">Applied</option>
-          <option value="INTERVIEW">Interview</option>
-          <option value="OFFER">Offer</option>
-          <option value="REJECTED">Rejected</option>
-        </select>
-
-        <!-- Add Application Button -->
-        <button
-          id="add-btn"
-          class="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition-colors"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-          </svg>
-          <span>Add Application</span>
-        </button>
-      </div>
-    </div>
-  </section>
-
-  <!-- Main Kanban Board Container -->
-  <main class="flex-1 overflow-x-auto p-4 sm:p-6 lg:p-8 kanban-scroll">
-    <div class="max-w-7xl mx-auto flex gap-4 items-start min-h-[calc(100vh-14rem)]">
-
-      <!-- Column: WISHLIST -->
-      <div class="w-72 shrink-0 flex flex-col rounded-xl bg-gray-100/70 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 p-3">
-        <div class="flex items-center justify-between pb-3 px-1 border-b border-gray-200 dark:border-gray-800 mb-3">
-          <div class="flex items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-gray-400"></span>
-            <h2 class="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">Wishlist</h2>
-          </div>
-          <span id="badge-WISHLIST" class="px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300">0</span>
-        </div>
-        <div id="col-WISHLIST" class="flex-1 flex flex-col gap-2.5 min-h-[200px] transition-all rounded-lg p-1">
-          <!-- Cards -->
-        </div>
-      </div>
-
-      <!-- Column: APPLIED -->
-      <div class="w-72 shrink-0 flex flex-col rounded-xl bg-gray-100/70 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 p-3">
-        <div class="flex items-center justify-between pb-3 px-1 border-b border-gray-200 dark:border-gray-800 mb-3">
-          <div class="flex items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-            <h2 class="text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300">Applied</h2>
-          </div>
-          <span id="badge-APPLIED" class="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-200">0</span>
-        </div>
-        <div id="col-APPLIED" class="flex-1 flex flex-col gap-2.5 min-h-[200px] transition-all rounded-lg p-1">
-          <!-- Cards -->
-        </div>
-      </div>
-
-      <!-- Column: INTERVIEW -->
-      <div class="w-72 shrink-0 flex flex-col rounded-xl bg-gray-100/70 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 p-3">
-        <div class="flex items-center justify-between pb-3 px-1 border-b border-gray-200 dark:border-gray-800 mb-3">
-          <div class="flex items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-yellow-500"></span>
-            <h2 class="text-xs font-bold uppercase tracking-wider text-yellow-700 dark:text-yellow-300">Interview</h2>
-          </div>
-          <span id="badge-INTERVIEW" class="px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 dark:bg-yellow-950 text-yellow-800 dark:text-yellow-200">0</span>
-        </div>
-        <div id="col-INTERVIEW" class="flex-1 flex flex-col gap-2.5 min-h-[200px] transition-all rounded-lg p-1">
-          <!-- Cards -->
-        </div>
-      </div>
-
-      <!-- Column: OFFER -->
-      <div class="w-72 shrink-0 flex flex-col rounded-xl bg-gray-100/70 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 p-3">
-        <div class="flex items-center justify-between pb-3 px-1 border-b border-gray-200 dark:border-gray-800 mb-3">
-          <div class="flex items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-green-500"></span>
-            <h2 class="text-xs font-bold uppercase tracking-wider text-green-700 dark:text-green-300">Offer</h2>
-          </div>
-          <span id="badge-OFFER" class="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 dark:bg-green-950 text-green-800 dark:text-green-200">0</span>
-        </div>
-        <div id="col-OFFER" class="flex-1 flex flex-col gap-2.5 min-h-[200px] transition-all rounded-lg p-1">
-          <!-- Cards -->
-        </div>
-      </div>
-
-      <!-- Column: REJECTED -->
-      <div class="w-72 shrink-0 flex flex-col rounded-xl bg-gray-100/70 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 p-3">
-        <div class="flex items-center justify-between pb-3 px-1 border-b border-gray-200 dark:border-gray-800 mb-3">
-          <div class="flex items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-red-400"></span>
-            <h2 class="text-xs font-bold uppercase tracking-wider text-red-600 dark:text-red-300">Rejected</h2>
-          </div>
-          <span id="badge-REJECTED" class="px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-200">0</span>
-        </div>
-        <div id="col-REJECTED" class="flex-1 flex flex-col gap-2.5 min-h-[200px] transition-all rounded-lg p-1">
-          <!-- Cards -->
-        </div>
-      </div>
-
-    </div>
-  </main>
-
-  <!-- Script Modules -->
-  <script type="module">
-    import { requireAuth, getUser, clearAuth } from './js/auth.js';
-    import { initBoard } from './js/board.js';
-
-    // Guard route: redirect to login if unauthenticated
-    requireAuth();
-
-    // Populate user profile info in header
-    const user = getUser();
-    if (user) {
-      document.getElementById('user-name').textContent = user.fullName || user.email;
-      document.getElementById('user-email').textContent = user.email || '';
-    }
-
-    // Logout handler
-    document.getElementById('logout-btn').addEventListener('click', () => {
-      clearAuth();
-      window.location.href = '/login.html';
-    });
-
-    // Initialize board data & listeners
-    initBoard();
-  </script>
+<body class="min-h-screen bg-[#f7f8f9] text-gray-900 antialiased selection:bg-[#d6001c] selection:text-white">
+  <div id="root"></div>
 </body>
 </html>
