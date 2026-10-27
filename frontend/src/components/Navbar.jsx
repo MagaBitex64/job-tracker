@@ -8,7 +8,7 @@ export default function Navbar({ user, onLogout }) {
         {/* Brand Logo - HeadHunter Red Identity */}
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-[#d6001c] flex items-center justify-center font-bold text-white text-base tracking-tighter shadow-sm select-none">
-            hh
+            JT
           </div>
           <div>
             <div className="flex items-center gap-2">
