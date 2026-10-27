@@ -5,7 +5,9 @@ A full-stack web application for tracking job applications on an interactive Kan
 ## Features
 
 - **Authentication**: Register and log in with JWT (stateless, BCrypt hashed passwords)
-- **Kanban Board**: Five columns — Wishlist, Applied, Interview, Offer, Rejected
+- **Frontend**: Modern React 18 SPA styled in clean HeadHunter (hh.ru) corporate Red & White design
+- **Clean URLs**: Clean browser routing (`/`, `/login`, `/register`) without `.html` extensions
+- **Kanban Board**: Five columns — В планах (Wishlist), Отклики (Applied), Собеседование (Interview), Оффер (Offer), Отказ (Rejected)
 - **Drag & Drop**: Move cards between columns using the native HTML5 drag-and-drop API
 - **CRUD**: Create, view, edit, and delete job applications
 - **Search & Filter**: Case-insensitive search by company or position; filter by status
@@ -24,7 +26,7 @@ A full-stack web application for tracking job applications on an interactive Kan
 | Persistence | Spring Data JPA, Hibernate 6, PostgreSQL 16 |
 | Migrations | Flyway |
 | Build | Apache Maven 3.9 |
-| Frontend | HTML5, Tailwind CSS (CDN), Vanilla ES Modules |
+| Frontend | React 18, Vite, Tailwind CSS, Lucide Icons, HeadHunter (hh.ru) Red/White Design |
 | Docs | springdoc-openapi (Swagger UI) |
 | Monitoring | Spring Boot Actuator |
 | Testing | JUnit 5, Mockito, AssertJ, Testcontainers, Spring MockMvc |
