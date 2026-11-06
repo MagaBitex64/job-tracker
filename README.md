@@ -12,6 +12,7 @@ A full-stack web application for tracking job applications on an interactive Kan
 - **CRUD**: Create, view, edit, and delete job applications
 - **Search & Filter**: Case-insensitive search by company or position; filter by status
 - **Stats Bar**: Live application count per status for the current user
+- **Automated Vacancy Parser**: Search and parse real-time vacancies from HeadHunter (hh.ru) and LinkedIn by keywords (e.g. "Java", "Spring Boot") with one-click import into the Kanban board
 - **Ownership Isolation**: Each user sees only their own data (enforced at the service layer)
 - **Dark Mode**: Automatically adapts to `prefers-color-scheme`
 - **API Documentation**: Swagger UI at `/swagger-ui.html`
@@ -74,6 +75,10 @@ com.jobtracker
 │   ├── mapper/      # ApplicationMapper
 │   ├── repository/  # ApplicationRepository, StatusCountProjection
 │   └── service/     # ApplicationService
+├── parser/
+│   ├── controller/  # ParserController
+│   ├── dto/         # ParsedVacancyDto, ImportVacancyRequest
+│   └── service/     # HeadHunterParserService, LinkedInParserService, VacancyAggregationService
 └── common/
     ├── dto/         # ErrorResponse
     └── exception/   # GlobalExceptionHandler, custom exceptions
@@ -93,6 +98,8 @@ com.jobtracker
 | PATCH | `/api/v1/applications/{id}/status` | Bearer | Update status (Kanban move) |
 | DELETE | `/api/v1/applications/{id}` | Bearer | Delete (204, 404 if not owned) |
 | GET | `/api/v1/applications/stats` | Bearer | Count per status |
+| GET | `/api/v1/parser/search` | Bearer | Search vacancies on HH & LinkedIn by query |
+| POST | `/api/v1/parser/import` | Bearer | One-click import parsed vacancy to user board |
 | GET | `/actuator/health` | Public | Health check |
 | GET | `/swagger-ui.html` | Public | Swagger UI |
 

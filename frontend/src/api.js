@@ -111,3 +111,13 @@ export function deleteApplication(id) {
 export function getStats() {
   return request('GET', '/applications/stats');
 }
+
+export function searchVacancies(query, source = 'ALL', limit = 15) {
+  const params = new URLSearchParams({ query, source, limit: limit.toString() });
+  return request('GET', `/parser/search?${params.toString()}`);
+}
+
+export function importVacancy(vacancyData) {
+  return request('POST', '/parser/import', vacancyData);
+}
+

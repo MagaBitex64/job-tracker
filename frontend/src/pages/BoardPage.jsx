@@ -4,6 +4,7 @@ import StatsBar from '../components/StatsBar';
 import KanbanBoard from '../components/KanbanBoard';
 import ApplicationModal from '../components/ApplicationModal';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
+import VacancySearchModal from '../components/VacancySearchModal';
 import Toast from '../components/Toast';
 import {
   getApplications,
@@ -14,7 +15,7 @@ import {
   deleteApplication,
   clearAuth,
 } from '../api';
-import { Plus, Search, Filter } from 'lucide-react';
+import { Plus, Search, Filter, Sparkles } from 'lucide-react';
 import { STATUS_LIST, STATUS_CONFIG } from '../constants';
 
 export default function BoardPage({ user, onLogout }) {
@@ -28,6 +29,7 @@ export default function BoardPage({ user, onLogout }) {
 
   // Modals state
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [editingApp, setEditingApp] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -109,6 +111,14 @@ export default function BoardPage({ user, onLogout }) {
     setStats(updatedStats);
   };
 
+  // Import from HH / LinkedIn
+  const handleImportSuccess = async (importedApp) => {
+    setApplications((prev) => [importedApp, ...prev]);
+    const updatedStats = await getStats();
+    setStats(updatedStats);
+    showToast(`"${importedApp.position}" (${importedApp.company}) добавлена в доску!`);
+  };
+
   // Delete
   const handleConfirmDelete = async () => {
     if (!deletingId) return;
@@ -172,6 +182,16 @@ export default function BoardPage({ user, onLogout }) {
               </div>
             </div>
 
+            {/* Search HH / LinkedIn Parser Button */}
+            <button
+              onClick={() => setIsSearchModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg bg-white hover:bg-gray-50 border border-gray-300 text-gray-800 shadow-2xs transition cursor-pointer"
+              title="Автоматический парсинг вакансий с HeadHunter и LinkedIn"
+            >
+              <Sparkles size={15} className="text-[#d6001c]" />
+              <span>Найти на HH / LinkedIn</span>
+            </button>
+
             {/* Add Button - Signature HH Red */}
             <button
               onClick={() => {
@@ -202,6 +222,12 @@ export default function BoardPage({ user, onLogout }) {
       </main>
 
       {/* Modal Dialogs */}
+      <VacancySearchModal
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
+        onImportSuccess={handleImportSuccess}
+      />
+
       <ApplicationModal
         app={editingApp}
         isOpen={isModalOpen}
