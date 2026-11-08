@@ -112,8 +112,32 @@ export function getStats() {
   return request('GET', '/applications/stats');
 }
 
-export function searchVacancies(query, source = 'ALL', limit = 15) {
-  const params = new URLSearchParams({ query, source, limit: limit.toString() });
+export function searchVacancies(queryOrParams, source = 'ALL', limit = 20) {
+  let params;
+  if (typeof queryOrParams === 'object' && queryOrParams !== null) {
+    const {
+      query = '',
+      source: src = 'ALL',
+      experience = 'any',
+      location = '',
+      remoteOnly = false,
+      limit: lim = 25,
+    } = queryOrParams;
+    params = new URLSearchParams({
+      query: query.trim(),
+      source: src,
+      experience,
+      limit: lim.toString(),
+    });
+    if (location && location.trim()) {
+      params.set('location', location.trim());
+    }
+    if (remoteOnly) {
+      params.set('remoteOnly', 'true');
+    }
+  } else {
+    params = new URLSearchParams({ query: queryOrParams, source, limit: limit.toString() });
+  }
   return request('GET', `/parser/search?${params.toString()}`);
 }
 

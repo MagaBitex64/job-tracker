@@ -32,13 +32,18 @@ public class ParserController {
     }
 
     @GetMapping("/search")
-    @Operation(summary = "Search vacancies from HeadHunter and LinkedIn by keyword")
+    @Operation(summary = "Search vacancies from HeadHunter and LinkedIn with keyword, experience, location and remote filter")
     public ResponseEntity<List<ParsedVacancyDto>> search(
             @RequestParam String query,
             @RequestParam(required = false, defaultValue = "ALL") String source,
-            @RequestParam(required = false, defaultValue = "15") int limit
+            @RequestParam(required = false, defaultValue = "any") String experience,
+            @RequestParam(required = false) String location,
+            @RequestParam(required = false, defaultValue = "false") boolean remoteOnly,
+            @RequestParam(required = false, defaultValue = "20") int limit
     ) {
-        List<ParsedVacancyDto> vacancies = vacancyAggregationService.searchAcrossPlatforms(query, source, limit);
+        List<ParsedVacancyDto> vacancies = vacancyAggregationService.searchAcrossPlatforms(
+                query, source, experience, location, remoteOnly, limit
+        );
         return ResponseEntity.ok(vacancies);
     }
 

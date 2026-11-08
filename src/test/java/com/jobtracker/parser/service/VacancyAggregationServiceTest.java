@@ -20,6 +20,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -54,14 +55,38 @@ class VacancyAggregationServiceTest {
         ParsedVacancyDto hhDto = new ParsedVacancyDto("Yandex", "Java Dev", "https://hh.ru/1", "Good", LocalDate.now(), "HeadHunter");
         ParsedVacancyDto liDto = new ParsedVacancyDto("Google", "Backend Engineer", "https://linkedin.com/1", "Great", LocalDate.now(), "LinkedIn");
 
-        when(headHunterParserService.searchVacancies("Java", 10)).thenReturn(List.of(hhDto));
-        when(linkedInParserService.searchVacancies("Java", 10)).thenReturn(List.of(liDto));
+        when(headHunterParserService.searchVacancies(eq("Java"), eq("any"), any(), eq(false), eq(10)))
+                .thenReturn(List.of(hhDto));
+        when(linkedInParserService.searchVacancies(eq("Java"), eq("any"), any(), eq(false), eq(10)))
+                .thenReturn(List.of(liDto));
 
         List<ParsedVacancyDto> result = aggregationService.searchAcrossPlatforms("Java", "ALL", 10);
 
         assertThat(result).hasSize(2).containsExactly(hhDto, liDto);
-        verify(headHunterParserService).searchVacancies("Java", 10);
-        verify(linkedInParserService).searchVacancies("Java", 10);
+        verify(headHunterParserService).searchVacancies(eq("Java"), eq("any"), any(), eq(false), eq(10));
+        verify(linkedInParserService).searchVacancies(eq("Java"), eq("any"), any(), eq(false), eq(10));
+    }
+
+    @Test
+    @DisplayName("searchAcrossPlatforms passes experience, location and remoteOnly parameters properly")
+    void searchAcrossPlatforms_withFilters() {
+        ParsedVacancyDto hhDto = new ParsedVacancyDto(
+                "Kaspi.kz", "Junior Java Developer", "https://hh.ru/3", "Notes", LocalDate.now(),
+                "HH", "Алматы", "от 300 000 ₸", "Без опыта"
+        );
+
+        when(headHunterParserService.searchVacancies(eq("Java"), eq("noExperience"), eq("Алматы"), eq(true), eq(15)))
+                .thenReturn(List.of(hhDto));
+
+        List<ParsedVacancyDto> result = aggregationService.searchAcrossPlatforms(
+                "Java", "HH", "noExperience", "Алматы", true, 15
+        );
+
+        assertThat(result).hasSize(1).containsExactly(hhDto);
+        assertThat(result.get(0).location()).isEqualTo("Алматы");
+        assertThat(result.get(0).experience()).isEqualTo("Без опыта");
+        verify(headHunterParserService).searchVacancies(eq("Java"), eq("noExperience"), eq("Алматы"), eq(true), eq(15));
+        verifyNoInteractions(linkedInParserService);
     }
 
     @Test
@@ -69,12 +94,13 @@ class VacancyAggregationServiceTest {
     void searchAcrossPlatforms_hhOnly() {
         ParsedVacancyDto hhDto = new ParsedVacancyDto("Sber", "Senior Java", "https://hh.ru/2", "Notes", LocalDate.now(), "HeadHunter");
 
-        when(headHunterParserService.searchVacancies("Java", 5)).thenReturn(List.of(hhDto));
+        when(headHunterParserService.searchVacancies(eq("Java"), any(), any(), anyBoolean(), eq(5)))
+                .thenReturn(List.of(hhDto));
 
         List<ParsedVacancyDto> result = aggregationService.searchAcrossPlatforms("Java", "HH", 5);
 
         assertThat(result).hasSize(1).containsExactly(hhDto);
-        verify(headHunterParserService).searchVacancies("Java", 5);
+        verify(headHunterParserService).searchVacancies(eq("Java"), any(), any(), anyBoolean(), eq(5));
         verifyNoInteractions(linkedInParserService);
     }
 

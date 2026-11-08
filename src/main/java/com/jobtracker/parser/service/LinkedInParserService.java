@@ -54,6 +54,11 @@ public class LinkedInParserService {
             Pattern.CASE_INSENSITIVE
     );
 
+    private static final Pattern SALARY_PATTERN = Pattern.compile(
+            "<span[^>]*class=\"[^\"]*job-search-card__salary-info[^\"]*\"[^>]*>\\s*([^<]+?)\\s*</span>",
+            Pattern.CASE_INSENSITIVE
+    );
+
     private final HttpClient httpClient;
 
     public LinkedInParserService() {
@@ -64,14 +69,57 @@ public class LinkedInParserService {
     }
 
     public List<ParsedVacancyDto> searchVacancies(String keyword, int limit) {
+        return searchVacancies(keyword, "any", null, false, limit);
+    }
+
+    public List<ParsedVacancyDto> searchVacancies(
+            String keyword,
+            String experience,
+            String location,
+            boolean remoteOnly,
+            int limit
+    ) {
         List<ParsedVacancyDto> result = new ArrayList<>();
         if (keyword == null || keyword.trim().isEmpty()) {
             return result;
         }
 
         try {
-            String encoded = URLEncoder.encode(keyword.trim(), StandardCharsets.UTF_8);
-            String url = "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=" + encoded + "&start=0";
+            StringBuilder urlBuilder = new StringBuilder("https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=");
+            String queryText = keyword.trim();
+
+            // Refine search query for junior / entry level
+            if ("noExperience".equalsIgnoreCase(experience)) {
+                queryText = queryText + " (Junior OR Intern OR Trainee OR Entry)";
+            }
+
+            urlBuilder.append(URLEncoder.encode(queryText, StandardCharsets.UTF_8));
+
+            if (location != null && !location.trim().isEmpty()) {
+                urlBuilder.append("&location=").append(URLEncoder.encode(location.trim(), StandardCharsets.UTF_8));
+            }
+
+            // LinkedIn Remote Filter
+            if (remoteOnly) {
+                urlBuilder.append("&f_WT=2");
+            }
+
+            // LinkedIn Experience levels:
+            // 1 = Internship, 2 = Entry level, 3 = Associate, 4 = Mid-Senior level, 5 = Director, 6 = Executive
+            if ("noExperience".equalsIgnoreCase(experience)) {
+                urlBuilder.append("&f_E=1%2C2");
+            } else if ("between1And3".equalsIgnoreCase(experience)) {
+                urlBuilder.append("&f_E=2%2C3");
+            } else if ("between3And6".equalsIgnoreCase(experience)) {
+                urlBuilder.append("&f_E=4");
+            } else if ("moreThan6".equalsIgnoreCase(experience)) {
+                urlBuilder.append("&f_E=5%2C6");
+            }
+
+            urlBuilder.append("&start=0");
+
+            String url = urlBuilder.toString();
+            log.info("Requesting LinkedIn guest jobs: {}", url);
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
@@ -95,22 +143,55 @@ public class LinkedInParserService {
             while (cardMatcher.find() && result.size() < maxItems) {
                 String cardHtml = cardMatcher.group();
 
-                String title = extract(TITLE_PATTERN, cardHtml, "Developer");
+                String rawTitle = extract(TITLE_PATTERN, cardHtml, "Developer");
+                String title = cleanHtml(rawTitle);
+
+                // Filter out senior / lead positions if user explicitly asked for noExperience
+                if ("noExperience".equalsIgnoreCase(experience)) {
+                    String lowerTitle = title.toLowerCase();
+                    if (lowerTitle.contains("senior") || lowerTitle.contains("lead")
+                            || lowerTitle.contains("principal") || lowerTitle.contains("architect")
+                            || lowerTitle.contains("director") || lowerTitle.contains("head of")) {
+                        continue;
+                    }
+                }
+
                 String company = extract(COMPANY_PATTERN, cardHtml, null);
                 if (company == null) {
                     company = extract(COMPANY_FALLBACK_PATTERN, cardHtml, "LinkedIn Employer");
                 }
+                company = cleanHtml(company);
+
                 String link = extract(LINK_PATTERN, cardHtml, null);
-                String location = extract(LOCATION_PATTERN, cardHtml, null);
+                String parsedLocation = extract(LOCATION_PATTERN, cardHtml, null);
+                if (parsedLocation != null) {
+                    parsedLocation = cleanHtml(parsedLocation);
+                }
+
+                String parsedSalary = extract(SALARY_PATTERN, cardHtml, null);
+                if (parsedSalary != null) {
+                    parsedSalary = cleanHtml(parsedSalary);
+                }
 
                 // Clean link tracking parameters if needed
                 if (link != null && link.contains("?")) {
                     link = link.substring(0, link.indexOf("?"));
                 }
 
+                String expLabel = formatExperienceLabel(experience);
+
                 StringBuilder notes = new StringBuilder();
-                if (location != null && !location.isEmpty()) {
-                    notes.append("Локация: ").append(location).append(". ");
+                if (parsedLocation != null && !parsedLocation.isEmpty()) {
+                    notes.append("Локация: ").append(parsedLocation).append(". ");
+                }
+                if (parsedSalary != null && !parsedSalary.isEmpty()) {
+                    notes.append("Доход: ").append(parsedSalary).append(". ");
+                }
+                if (expLabel != null) {
+                    notes.append("Требуемый опыт: ").append(expLabel).append(". ");
+                }
+                if (remoteOnly) {
+                    notes.append("Формат: Удаленная работа. ");
                 }
                 notes.append("Импортировано из LinkedIn (по запросу '").append(keyword.trim()).append("').");
 
@@ -126,12 +207,15 @@ public class LinkedInParserService {
                 }
 
                 result.add(new ParsedVacancyDto(
-                        cleanHtml(company),
-                        cleanHtml(title),
+                        company,
+                        title,
                         link,
                         finalNotes,
                         LocalDate.now(),
-                        "LINKEDIN"
+                        "LINKEDIN",
+                        parsedLocation,
+                        parsedSalary,
+                        expLabel
                 ));
             }
         } catch (Exception e) {
@@ -139,6 +223,19 @@ public class LinkedInParserService {
         }
 
         return result;
+    }
+
+    private String formatExperienceLabel(String exp) {
+        if (exp == null || exp.isBlank() || "any".equalsIgnoreCase(exp)) {
+            return null;
+        }
+        return switch (exp.trim()) {
+            case "noExperience" -> "Без опыта (Junior / Trainee)";
+            case "between1And3" -> "1–3 года (Junior+ / Middle)";
+            case "between3And6" -> "3–6 лет (Senior)";
+            case "moreThan6" -> "Более 6 лет (Lead)";
+            default -> exp;
+        };
     }
 
     private String extract(Pattern pattern, String text, String defaultValue) {

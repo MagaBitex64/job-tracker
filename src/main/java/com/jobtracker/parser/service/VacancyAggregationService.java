@@ -31,6 +31,17 @@ public class VacancyAggregationService {
     }
 
     public List<ParsedVacancyDto> searchAcrossPlatforms(String keyword, String source, int limit) {
+        return searchAcrossPlatforms(keyword, source, "any", null, false, limit);
+    }
+
+    public List<ParsedVacancyDto> searchAcrossPlatforms(
+            String keyword,
+            String source,
+            String experience,
+            String location,
+            boolean remoteOnly,
+            int limit
+    ) {
         List<ParsedVacancyDto> combined = new ArrayList<>();
         if (keyword == null || keyword.trim().isEmpty()) {
             return combined;
@@ -39,11 +50,11 @@ public class VacancyAggregationService {
         String src = source != null ? source.toUpperCase().trim() : "ALL";
 
         if ("ALL".equals(src) || "HH".equals(src)) {
-            combined.addAll(headHunterParserService.searchVacancies(keyword, limit));
+            combined.addAll(headHunterParserService.searchVacancies(keyword, experience, location, remoteOnly, limit));
         }
 
         if ("ALL".equals(src) || "LINKEDIN".equals(src)) {
-            combined.addAll(linkedInParserService.searchVacancies(keyword, limit));
+            combined.addAll(linkedInParserService.searchVacancies(keyword, experience, location, remoteOnly, limit));
         }
 
         return combined;

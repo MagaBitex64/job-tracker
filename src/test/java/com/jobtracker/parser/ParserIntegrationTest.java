@@ -26,6 +26,21 @@ class ParserIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
+    @DisplayName("GET /api/v1/parser/search should accept experience, location, remoteOnly and return 200 when authenticated")
+    void searchVacancies_withFilters_authenticated() throws Exception {
+        AuthResponse auth = createAndAuthenticateUser("parser_filter_user@example.com", "Filter User", "Password123!");
+
+        mockMvc.perform(get("/api/v1/parser/search")
+                        .header("Authorization", "Bearer " + auth.token())
+                        .param("query", "Java")
+                        .param("experience", "noExperience")
+                        .param("location", "Алматы")
+                        .param("remoteOnly", "true")
+                        .param("limit", "10"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     @DisplayName("POST /api/v1/parser/import should return 401 when unauthenticated")
     void importVacancy_unauthenticated() throws Exception {
         ImportVacancyRequest request = new ImportVacancyRequest(

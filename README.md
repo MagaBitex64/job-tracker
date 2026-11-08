@@ -108,6 +108,14 @@ com.jobtracker
 - `search` — case-insensitive match on company or position
 - `page`, `size`, `sort` — standard Spring Data pagination
 
+**Query params for `GET /api/v1/parser/search`:**
+- `query` — keyword search (e.g. `Java`, `Spring Boot`, `QA`)
+- `source` — `ALL`, `HH` (HeadHunter), `LINKEDIN`
+- `experience` — `any`, `noExperience` (Junior/Trainee), `between1And3` (Junior+/Middle), `between3And6` (Senior), `moreThan6` (Lead)
+- `location` — city or country name (e.g. `Алматы`, `Астана`, `Москва`, `Казахстан`, `Россия`)
+- `remoteOnly` — `true` / `false` (filter only remote vacancies)
+- `limit` — max items to return (default: 20)
+
 ## How to Run
 
 ### Option 1: Docker Compose (recommended)
